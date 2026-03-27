@@ -1,0 +1,291 @@
+{
+  "name": "Notificador de Nuevos Datos",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "577e727e-bc54-4440-8d6f-d2f78e52999e",
+              "leftValue": "={{ $json.body.email }}",
+              "rightValue": "^[a-zA-Z0-9_%.+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -768,
+        0
+      ],
+      "id": "0410d306-2c7d-412d-a0be-1de178dff457",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "dreewrootsstark@gmail.com",
+        "subject": "Nuevos datos recibidos en n8n",
+        "message": "=<!DOCTYPE html> <html lang=\"es\"> <head>     <meta charset=\"UTF-8\"> </head> <body style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff; margin: 0; padding: 20px;\">     <div style=\"max-width: 600px; margin: 0 auto; padding: 30px; border-left: 4px solid #2196F3;\">         <h2 style=\"color: #333333; margin-top: 0;\">Mensaje recibido</h2>         <div style=\"background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;\">             <p style=\"color: #555555; font-size: 15px; line-height: 1.8; margin: 0; white-space: pre-wrap;\">{{ $('Webhook').item.json.body.mensaje }}</p>         </div>         <p style=\"color: #999999; font-size: 12px; margin-top: 30px;\">             <strong>Fecha:</strong> {{ $now.toFormat('dd/MM/yyyy HH:mm') }}         </p>     </div> </body> </html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -576,
+        -160
+      ],
+      "id": "9152b4f9-c3d7-475a-a8b3-acd1263c77c2",
+      "name": "Send a message",
+      "webhookId": "e0a8ecab-880f-48e5-9180-22686c0d1ecb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "jel9q5fUGc6YKcx5",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3d6ec1fc-e21e-4ac8-9bf7-314fd546d23b",
+              "name": "Fecha/Hora",
+              "value": "={{ $now.format(\"DD/MM/YYYY HH:mm:ss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "314ce3d0-94b8-4b1a-adb4-391a53c1873d",
+              "name": "Dato Recibido",
+              "value": "={{ JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "8dcc0e44-8a6b-41ec-a84e-d49293521a80",
+              "name": "Tipo de Error",
+              "value": "Email inválido o formato incorrecto",
+              "type": "string"
+            },
+            {
+              "id": "3b3f17a4-e74d-4b8f-bfcd-b96cd2452c5a",
+              "name": "Webhook Origen",
+              "value": "\tnotify",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        144
+      ],
+      "id": "50f6d01b-6b2d-407f-9d54-4fdd6c5da2bd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/notify",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -960,
+        0
+      ],
+      "id": "23c5b920-14c3-4df6-aba2-478adf80e63b",
+      "name": "Webhook",
+      "webhookId": "07989df4-7271-4b7f-a8af-cf1893775106"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Xrdz2IY3_3_0Hv36tjHcNHU9MdsMcBJ4fQ9Y8qHV2lY/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Hoja 1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Fecha/Hora": "= Column A [Fecha/Hora]: {{ $json.Fecha/Hora }}",
+            "Dato Recibido": "=Column B [Dato Recibido]: {{ $json.Dato Recibido }}",
+            "Tipo de Error": "=Column C [Tipo de Error]: {{ $json.Tipo de Error }}",
+            "Webhook Origen": "=Column D [Webhook Origen]: {{ $json.Webhook Origen }}"
+          },
+          "matchingColumns": [
+            "Fecha/Hora"
+          ],
+          "schema": [
+            {
+              "id": "Fecha/Hora",
+              "displayName": "Fecha/Hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Dato Recibido",
+              "displayName": "Dato Recibido",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tipo de Error",
+              "displayName": "Tipo de Error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Webhook Origen",
+              "displayName": "Webhook Origen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -224,
+        144
+      ],
+      "id": "f17fc33c-2b54-4428-8a36-59089b1188f9",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6FLWjym5kPOTlj3Z",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst item = $input.item.json;\n\nreturn {\n  \"Fecha/Hora\": String(item[\"Fecha/Hora\"] || new Date().toLocaleString()),\n  \"Dato Recibido\": String(item[\"Dato Recibido\"] || \"{}\"),\n  \"Tipo de Error\": String(item[\"Tipo de Error\"] || \"Email inválido o formato incorrecto\"),\n  \"Webhook Origen\": String(item[\"Webhook Origen\"] || \"notify\")\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        144
+      ],
+      "id": "d364b36d-e6de-4dec-8401-40a32ee853a8",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "4c38cf8e-9d66-4840-be27-9360f2f3c196",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2334754f6b82c69a74002c054fba5bcd13c001f0a965ee433a5d02e5f60c3a76"
+  },
+  "id": "dhYGA1GCqm1XBxwE",
+  "tags": []
+}
