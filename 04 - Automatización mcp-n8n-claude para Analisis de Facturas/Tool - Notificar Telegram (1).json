@@ -1,0 +1,127 @@
+{
+  "name": "Tool - Notificar Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "536cda9f-acf9-4970-97c9-38cb8a291171",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26e0d5c2-1368-4687-bf56-be2363b89969",
+              "name": "mensaje",
+              "value": "={{ \"📄 *Notificación de Facturas n8n*\\n\\n\" + $json.query }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f9a74f9f-9271-449c-bea1-b7120973e66b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "chatId": "8618980626",
+        "text": "={{ $json.mensaje}}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "4a7c49c9-1477-4263-be5a-6e74a53bb7e6",
+      "name": "Send a text message",
+      "webhookId": "7feb01bb-5abd-429c-b068-64a300865309",
+      "credentials": {
+        "telegramApi": {
+          "id": "404SoRXHOgAsVdyf",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Obtenemos el texto del mensaje\nconst inputMensaje = $input.item.json.mensaje || \"\";\n\n// 2. Función de extracción ULTRA-PRECISA\nconst extraer = (etiqueta) => {\n  /* Explicación del Regex:\n     - [^a-zA-Z0-9]* : Ignora emoticonos o símbolos antes de la etiqueta.\n     - ${etiqueta}   : Busca tu palabra clave.\n     - [^:]* : Ignora cualquier cosa que no sea \":\" (como emoticonos pegados).\n     - :?\\s* : Busca los dos puntos opcionales y espacios.\n     - ([^\\\\\\n\\r|]*) : CAPTURA: Todo lo que NO sea un salto de línea (\\n), un retorno (\\r) o un separador (|).\n  */\n  const regex = new RegExp(`(?:[^a-zA-Z0-9]*)${etiqueta}[^:]*:?\\\\s*([^\\\\\\\\\\\\n\\\\r|]*)`, 'i');\n  const match = inputMensaje.match(regex);\n  \n  if (match && match[1]) {\n    // Limpiamos espacios y posibles restos de n8n\n    return match[1].split('\\\\n')[0].trim(); \n  }\n  return null;\n};\n\n// 3. Extraemos los campos usando solo las palabras clave\nconst datos = {\n  proveedor: extraer('Proveedor'),\n  numero: extraer('Nº Factura') || extraer('Número'),\n  fecha: extraer('Fecha'),\n  subtotal: extraer('Subtotal'),\n  impuestos: extraer('Impuestos'),\n  total: extraer('TOTAL'),\n  pago: extraer('Forma de pago') || extraer('Pago'),\n  estado: extraer('Estado'),\n  moneda: extraer('Moneda')\n};\n\n// 4. Limpiador final de caracteres basura\nconst clean = (text) => {\n  if (!text || text.toLowerCase() === \"null\" || text === \"N/A\") return 'No disponible';\n  return text.toString()\n    .replace(/[{}*\"\\\\]/g, '') // Elimina llaves, asteriscos, comillas y barras\n    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // Escape HTML\n    .trim();\n};\n\n// 5. Construcción del mensaje HTML limpio para Telegram\nconst mensajeHTML = `\n<b>🔔 NOTIFICACIÓN DE FACTURA</b>\n\n📄 <b>Información General</b>\n━━━━━━━━━━━━━━━━━━\n🏢 <b>Proveedor:</b> ${clean(datos.proveedor)}\n🔢 <b>Nº Factura:</b> ${clean(datos.numero)}\n📅 <b>Fecha:</b> ${clean(datos.fecha)}\n\n💰 <b>Resumen Económico</b>\n━━━━━━━━━━━━━━━━━━\n<b>Subtotal:</b> ${clean(datos.subtotal)}\n<b>IVA/Impuestos:</b> ${clean(datos.impuestos)}\n✅ <b>TOTAL:</b> <code>${clean(datos.total)} ${clean(datos.moneda)}</code>\n\n📌 <b>Detalles Adicionales</b>\n━━━━━━━━━━━━━━━━━━\n💳 <b>Método de Pago:</b> ${clean(datos.pago)}\n🚦 <b>Estado:</b> <i>${clean(datos.estado)}</i>\n`.trim();\n\nreturn {\n  mensaje: mensajeHTML\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "df01e325-1d8d-4f4e-a258-5047447cd4b1",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fb36e682-cdfb-46fb-baa9-1445c5d91433",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "df3817e93dd9857866803348ccedc559e6131a9b0a110618d997e713531c8018"
+  },
+  "id": "vTecdNl31NPcSbxQ",
+  "tags": []
+}
