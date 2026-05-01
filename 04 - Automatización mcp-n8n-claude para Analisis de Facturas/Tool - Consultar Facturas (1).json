@@ -1,0 +1,165 @@
+{
+  "name": "Tool - Consultar Facturas",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d518bb68-3062-4aba-98f3-1abd9b02c34d",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "33df26b8-d590-80c2-9c00-f7489e6d90dd",
+          "mode": "list",
+          "cachedResultName": "Base de facturas",
+          "cachedResultUrl": "https://www.notion.so/33df26b8d59080c29c00f7489e6d90dd"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e1d56324-e188-4577-8b79-aca231a47b7c",
+      "name": "Get many database pages",
+      "credentials": {
+        "notionApi": {
+          "id": "wkEnlNzpgoVTU4kN",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3036a52b-44fd-414f-8a16-c012e419aad6",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "eef95b6d-919c-4707-8242-ab1c65f016eb",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Formatear las facturas de Notion\nconst items = $input.all();\n\nconst facturas = items.map(item => {\n  // Usamos || {} para que si properties no existe, al menos sea un objeto vacío\n  const props = item.json.properties || {};\n  \n  return {\n    proveedor: item.json.name || \"N/A\",\n    // Agregamos ? en cada nivel para evitar el error de \"undefined\"\n    numero: props[\"Numero Factura\"]?.rich_text?.[0]?.plain_text || \"N/A\",\n    fecha: props[\"Fecha Factura\"]?.date?.start || \"N/A\",\n    subtotal: props.Subtotal?.number || 0,\n    impuestos: props.Impuestos?.number || 0,\n    total: props.Total?.number || 0,\n    moneda: props.Moneda?.select?.name || \"COP\",\n    estado: props.Estado?.select?.name || \"N/A\"\n  };\n});\n\nconst resumen = {\n  total_facturas: facturas.length,\n  suma_total: facturas.reduce((acc, f) => acc + (f.total || 0), 0),\n  facturas: facturas\n};\n\nreturn [{\n  json: {\n    response: JSON.stringify(resumen, null, 2)\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -96
+      ],
+      "id": "eb364f5a-bb88-49b4-95f7-a6f62635fea7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"No se encontraron facturas\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        96
+      ],
+      "id": "84ee342c-3fb8-486a-9abb-0b04ff44730c",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get many database pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many database pages": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ca8114f7-b828-429e-b98e-1574adba9ff0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "df3817e93dd9857866803348ccedc559e6131a9b0a110618d997e713531c8018"
+  },
+  "id": "KxDeqqFzQ1N2xVbY",
+  "tags": []
+}

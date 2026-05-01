@@ -1,0 +1,153 @@
+{
+  "name": "Tool - Guardar en Notion",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "984bd2da-6653-43e2-848e-2c384f8289ba",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        176,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parsear los datos de la factura que envía Claude\nconst input = $input.first().json.query;\nlet data;\n\ntry {\n  data = JSON.parse(input);\n} catch (e) {\n  // Si no es JSON válido, intentar extraer datos del texto\n  data = {\n    proveedor: input,\n    numero_factura: \"No especificado\",\n    fecha: new Date().toISOString().split('T')[0],\n    subtotal: 0,\n    impuestos: 0,\n    total: 0,\n    moneda: \"COP\",\n    items: \"No especificado\",\n    estado: \"Pendiente\"\n  };\n}\n\nreturn [{\n  json: {\n    proveedor: data.proveedor || \"No especificado\",\n    numero_factura: data.numero_factura || \"No especificado\",\n    fecha: data.fecha || new Date().toISOString().split('T')[0],\n    subtotal: parseFloat(data.subtotal) || 0,\n    impuestos: parseFloat(data.impuestos) || 0,\n    total: parseFloat(data.total) || 0,\n    moneda: data.moneda || \"COP\",\n    items: typeof data.items === 'object' \n      ? JSON.stringify(data.items) \n      : String(data.items || \"No especificado\"),\n    estado: data.estado || \"Pendiente\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        240
+      ],
+      "id": "77db0d2f-e5fa-4b80-bf57-1cdd28341368",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "33df26b8-d590-80c2-9c00-f7489e6d90dd",
+          "__regex": "^([0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12})"
+        },
+        "title": "Base de Facturas",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Proveedor|title",
+              "title": "={{ $json.proveedor }}"
+            },
+            {
+              "key": "Numero Factura|rich_text",
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "textType": "equation",
+                    "expression": "={{ $json.numero_factura }}",
+                    "annotationUi": {}
+                  }
+                ]
+              }
+            },
+            {
+              "key": "Fecha Factura|date",
+              "date": "={{ $json.fecha }}"
+            },
+            {
+              "key": "Subtotal|number",
+              "numberValue": "={{ $json.subtotal }}"
+            },
+            {
+              "key": "Impuestos|number",
+              "numberValue": "={{ $json.impuestos }}"
+            },
+            {
+              "key": "Total|number",
+              "numberValue": "={{ $json.total }}"
+            },
+            {
+              "key": "Moneda|select",
+              "selectValue": "={{ $json.moneda }}"
+            },
+            {
+              "key": "Items|rich_text",
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "textType": "equation",
+                    "expression": "={{ $json.items }}",
+                    "annotationUi": {}
+                  }
+                ]
+              }
+            },
+            {
+              "key": "Estado|select",
+              "selectValue": "={{ $json.estado }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        592,
+        240
+      ],
+      "id": "62e00131-3293-4c75-9844-0836d822d289",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "wkEnlNzpgoVTU4kN",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "0ebc380c-66b8-4dba-b4ab-868870917627",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "df3817e93dd9857866803348ccedc559e6131a9b0a110618d997e713531c8018"
+  },
+  "id": "XbRHF4R6Jj7AitYk",
+  "tags": []
+}
