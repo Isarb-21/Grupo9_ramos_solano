@@ -26,10 +26,10 @@ Instala las dependencias e inicia Streamlit:
 
 ```bash
 pip install -r requirements.txt
-streamlit run app.py
+python -m streamlit run app.py
 ```
 
-Abre en el navegador la dirección que indique Streamlit (normalmente `http://localhost:8501`). En el inicio de sesión de demo, ingresa cualquier usuario y contraseña no vacíos.
+Si el comando `streamlit` no aparece en tu terminal, usa `python -m streamlit` (especialmente en Windows con Python instalado sin PATH global). Abre en el navegador la dirección que indique Streamlit (normalmente `http://localhost:8501`). En el inicio de sesión de demo, ingresa cualquier usuario y contraseña no vacíos.
 
 ## Uso opcional de Claude
 
